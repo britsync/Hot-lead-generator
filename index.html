@@ -266,6 +266,55 @@
             opacity: 0.3;
         }
 
+        .lead-gen-form {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            font-size: 14px;
+            font-family: var(--font-family-base);
+            background: var(--color-background);
+            color: var(--color-text);
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .form-group input::placeholder {
+            color: var(--color-text-secondary);
+        }
+
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -315,6 +364,39 @@
             </div>
             <button class="btn btn-secondary" onclick="fetchLeads()" style="padding: 6px 12px; font-size: 13px;">
                 <span id="refreshBtn">🔄 Refresh Now</span>
+            </button>
+        </div>
+
+        <!-- Lead Generation Form -->
+        <div class="lead-gen-form">
+            <h2 style="font-size: 20px; margin-bottom: 16px; font-weight: 600;">Generate New Leads</h2>
+            <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 20px;">
+                Enter search criteria to generate qualified leads from your workflow
+            </p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="roleInput">Role/Job Title</label>
+                    <input type="text" id="roleInput" placeholder="e.g. Director of Sales, Marketing Manager" />
+                </div>
+                <div class="form-group">
+                    <label for="seniorityInput">Seniority Level</label>
+                    <select id="seniorityInput">
+                        <option value="">Select seniority...</option>
+                        <option value="C-Level">C-Level</option>
+                        <option value="VP">VP / Vice President</option>
+                        <option value="Director">Director</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Entry">Entry Level</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="industryInput">Industry</label>
+                    <input type="text" id="industryInput" placeholder="e.g. E-commerce, Technology, Healthcare" />
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="generateLeads()" id="generateBtn" style="width: 100%; margin-top: 16px;">
+                <span id="generateBtnText">🚀 Generate Leads</span>
             </button>
         </div>
 
@@ -381,9 +463,10 @@
 
     <script>
         // ============= CONFIGURATION =============
-        const WEBHOOK_URL = 'https://aur5.app.n8n.cloud/webhook/BritSyncLeads1';
+        const WEBHOOK_URL = 'https://aur5.app.n8n.cloud/webhook-test/BritSyncLeads1';
         const STORAGE_KEY = 'britsync_leads';
         const FETCH_INTERVAL = 30000; // Fetch every 30 seconds
+        const WORKFLOW_TRIGGER_URL = 'https://aur5.app.n8n.cloud/webhook-test/BritSyncLeads1'; // Your workflow trigger webhook
         // =========================================
 
         let currentFilter = 'all';
@@ -741,6 +824,75 @@
                 saveLeadsToStorage();
                 updateStats();
                 renderTable();
+            }
+        }
+
+        // Generate leads by triggering workflow
+        async function generateLeads() {
+            const role = document.getElementById('roleInput').value.trim();
+            const seniority = document.getElementById('seniorityInput').value;
+            const industry = document.getElementById('industryInput').value.trim();
+
+            if (!role && !seniority && !industry) {
+                alert('Please fill in at least one search criteria');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generateBtn');
+            const generateBtnText = document.getElementById('generateBtnText');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            try {
+                generateBtn.disabled = true;
+                generateBtnText.innerHTML = '<span class="loading-spinner"></span> Generating leads...';
+                statusDot.className = 'status-dot';
+                statusText.textContent = 'Workflow running...';
+
+                // Send data to workflow trigger webhook
+                const response = await fetch(WORKFLOW_TRIGGER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        role: role,
+                        seniority: seniority,
+                        industry: industry,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Workflow response:', data);
+
+                // Process the returned leads immediately
+                if (data) {
+                    processWebhookData(data);
+                    statusText.textContent = `✓ Lead generation complete • ${new Date().toLocaleTimeString()}`;
+                    alert(`Success! Generated leads have been added to the dashboard.`);
+                } else {
+                    statusText.textContent = `Workflow triggered • ${new Date().toLocaleTimeString()}`;
+                    alert('Workflow triggered successfully! Leads will appear when ready.');
+                }
+
+                // Clear form
+                document.getElementById('roleInput').value = '';
+                document.getElementById('seniorityInput').value = '';
+                document.getElementById('industryInput').value = '';
+
+            } catch (error) {
+                console.error('Generate leads error:', error);
+                statusDot.className = 'status-dot error';
+                statusText.textContent = `Error: ${error.message}`;
+                alert(`Error generating leads: ${error.message}`);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtnText.textContent = '🚀 Generate Leads';
             }
         }
 
