@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Generation Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; }
+        .metrics { margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px 12px; border: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+        button { padding: 10px 20px; margin: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+
+    <h1>Lead Generation Dashboard</h1>
+
+    <div class="metrics">
+        <p>Total Leads: <span id="total-leads">0</span></p>
+        <p>Leads in Last 24 Hours: <span id="last-24-hours">0</span></p>
+        <p>Leads Scored Above 80: <span id="scored-above-80">0</span></p>
+        <p>Leads Scored Below 80: <span id="scored-below-80">0</span></p>
+    </div>
+
+    <button onclick="exportCSV()">Export to CSV</button>
+    <button onclick="exportExcel()">Export to Excel</button>
+
+    <h2>Lead Data</h2>
+    <table id="lead-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dynamic rows will be inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Sample lead data (normally, you would fetch this from an API or server)
+        const leads = [
+            { name: "John Doe", email: "john@example.com", phone: "555-1234", score: 85 },
+            { name: "Jane Smith", email: "jane@example.com", phone: "555-5678", score: 70 },
+            { name: "Charlie Brown", email: "charlie@example.com", phone: "555-9101", score: 90 }
+        ];
+
+        // Store leads in localStorage
+        localStorage.setItem('leads', JSON.stringify(leads));
+
+        // Function to render the dashboard
+        function renderDashboard() {
+            const leadsData = JSON.parse(localStorage.getItem('leads'));
+            const totalLeads = leadsData.length;
+            const last24Hours = leadsData.filter(lead => new Date() - new Date(lead.timestamp) <= 86400000).length;
+            const scoredAbove80 = leadsData.filter(lead => lead.score >= 80).length;
+            const scoredBelow80 = leadsData.filter(lead => lead.score < 80).length;
+
+            // Update metrics
+            document.getElementById('total-leads').textContent = totalLeads;
+            document.getElementById('last-24-hours').textContent = last24Hours;
+            document.getElementById('scored-above-80').textContent = scoredAbove80;
+            document.getElementById('scored-below-80').textContent = scoredBelow80;
+
+            // Render the table
+            const tableBody = document.getElementById('lead-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            leadsData.forEach(lead => {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = lead.name;
+                row.insertCell(1).textContent = lead.email;
+                row.insertCell(2).textContent = lead.phone;
+                row.insertCell(3).textContent = lead.score;
+            });
+        }
+
+        // Export to CSV
+        function exportCSV() {
+            const leadsData = JSON.parse(localStorage.getItem('leads'));
+            const csvContent = "Name,Email,Phone,Score\n" + leadsData.map(lead => `${lead.name},${lead.email},${lead.phone},${lead.score}`).join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            saveAs(blob, "leads.csv");
+        }
+
+        // Export to Excel
+        function exportExcel() {
+            const leadsData = JSON.parse(localStorage.getItem('leads'));
+            const ws = XLSX.utils.json_to_sheet(leadsData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Leads");
+            XLSX.writeFile(wb, "leads.xlsx");
+        }
+
+        // Initialize dashboard
+        renderDashboard();
+    </script>
+
+</body>
+</html>
+</html>
