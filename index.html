@@ -46,11 +46,11 @@
     </table>
 
     <script>
-        // Sample lead data (normally, you would fetch this from an API or server)
-        const leads = [
-            { name: "John Doe", email: "john@example.com", phone: "555-1234", score: 85 },
-            { name: "Jane Smith", email: "jane@example.com", phone: "555-5678", score: 70 },
-            { name: "Charlie Brown", email: "charlie@example.com", phone: "555-9101", score: 90 }
+        // Simulated leads array, would normally come from a real-time webhook.
+        let leads = [
+            { name: "John Doe", email: "john@example.com", phone: "555-1234", score: 85, timestamp: new Date().toISOString() },
+            { name: "Jane Smith", email: "jane@example.com", phone: "555-5678", score: 70, timestamp: new Date().toISOString() },
+            { name: "Charlie Brown", email: "charlie@example.com", phone: "555-9101", score: 90, timestamp: new Date().toISOString() }
         ];
 
         // Store leads in localStorage
@@ -105,5 +105,4 @@
     </script>
 
 </body>
-</html>
 </html>
