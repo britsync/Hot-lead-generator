@@ -444,7 +444,12 @@
 
         // Process incoming webhook data from Google Sheets
         function processWebhookData(data) {
-            if (!data) return;
+            console.log('Received webhook data:', data);
+            
+            if (!data) {
+                console.log('No data received');
+                return;
+            }
 
             // Handle different data structures
             let leads = [];
@@ -455,8 +460,21 @@
                 leads = data.leads;
             } else if (data.json && Array.isArray(data.json)) {
                 leads = data.json;
-            } else {
+            } else if (data.body && Array.isArray(data.body)) {
+                leads = data.body;
+            } else if (typeof data === 'object' && data.Name) {
+                // Single lead object
                 leads = [data];
+            } else {
+                console.log('Unknown data structure:', data);
+                leads = [];
+            }
+
+            console.log('Parsed leads:', leads);
+
+            if (leads.length === 0) {
+                console.log('No leads to process');
+                return;
             }
 
             let newLeadsCount = 0;
