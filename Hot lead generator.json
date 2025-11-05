@@ -1,0 +1,701 @@
+{
+  "name": "Hot lead generator",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        144
+      ],
+      "id": "0b3033dd-3dec-40bc-b0cc-db9723ff8f7a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fb5ffa8-5c7f-49cf-9948-60928f69c23c",
+              "name": "service_name",
+              "value": "Ai Marketing Automation",
+              "type": "string"
+            },
+            {
+              "id": "2ba51cde-b431-4449-99a0-a3ff8494148f",
+              "name": "price_range",
+              "value": "£300-£500/month",
+              "type": "string"
+            },
+            {
+              "id": "8b8445e8-2634-4e7f-879d-d3419d03d6cc",
+              "name": "region",
+              "value": "United Kingdom",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        144
+      ],
+      "id": "ca692d40-9db7-4345-8e30-11d9a17da084",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apollo.io/api/v1/mixed_people/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "person_titles[]",
+              "value": "director, sales"
+            },
+            {
+              "name": "person_locations[]",
+              "value": "Washington, US"
+            },
+            {
+              "name": "per_page",
+              "value": "5"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cache-Control",
+              "value": "no-cache"
+            },
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "S7QzLobrl21ChTLxFIEDBQ"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        144
+      ],
+      "id": "ca83220b-6192-4afd-9c4e-02b55409212e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        144
+      ],
+      "id": "8706a9e9-c682-4302-8806-b42cc62807a4",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "951e3112-65d8-4f08-9fb8-83d751d95d98",
+              "leftValue": "={{ $json.output[0].content[0].text.score }}",
+              "rightValue": 90,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        64
+      ],
+      "id": "8680fd92-30c8-4684-b966-e4c9e0effa50",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        160
+      ],
+      "id": "26248682-a6f6-42db-9786-806ab5665b37",
+      "name": "Do A Lead Call, Other..."
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1cMGNfM9HqaVTZmeywoK8V6dfG3dQSQk8HCkiCr-E-JI",
+          "mode": "list",
+          "cachedResultName": "BritSync",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cMGNfM9HqaVTZmeywoK8V6dfG3dQSQk8HCkiCr-E-JI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1117702667,
+          "mode": "list",
+          "cachedResultName": "LowScore Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cMGNfM9HqaVTZmeywoK8V6dfG3dQSQk8HCkiCr-E-JI/edit#gid=1117702667"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('Loop Over Items').item.json.contacts.email.value }}",
+            "Phone": "={{ $('Loop Over Items').item.json.contacts.phones[0].sanitized_number }}",
+            "Company": "={{ $('Loop Over Items').item.json.company.name }}, {{ $('Loop Over Items').item.json.company.industry }}",
+            "Role": "={{ $('Loop Over Items').item.json.role.title }}",
+            "Location": "={{ $('Loop Over Items').item.json.location.city }}, {{ $('Loop Over Items').item.json.location.country }}",
+            "Score": "={{ $('SCORE THE LEAD').item.json.output[0].content[0].text.score }}",
+            "Name": "={{ $('Loop Over Items').item.json.name.full }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1696,
+        -32
+      ],
+      "id": "a689d531-07f8-4dab-bb35-73b28bd4ffd9",
+      "name": "ADD LOW SCORE LEADS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4sNAzWQbbdWQv9iF",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "ADD LOW SCORE LEADS TO GOOGLE SHEET"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1cMGNfM9HqaVTZmeywoK8V6dfG3dQSQk8HCkiCr-E-JI",
+          "mode": "list",
+          "cachedResultName": "BritSync",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cMGNfM9HqaVTZmeywoK8V6dfG3dQSQk8HCkiCr-E-JI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "HighScore Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cMGNfM9HqaVTZmeywoK8V6dfG3dQSQk8HCkiCr-E-JI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('Loop Over Items').item.json.contacts.email.value }}",
+            "Phone": "={{ $('Loop Over Items').item.json.contacts.phones[0].sanitized_number }}",
+            "Company": "={{ $('Loop Over Items').item.json.company.name }}, {{ $('Loop Over Items').item.json.company.industry }}",
+            "Role": "={{ $('Loop Over Items').item.json.role.title }}",
+            "Location": "={{ $('Loop Over Items').item.json.location.city }}, {{ $('Loop Over Items').item.json.location.country }}",
+            "Score": "={{ $('SCORE THE LEAD').item.json.output[0].content[0].text.score }}",
+            "Name": "={{ $('Loop Over Items').item.json.name.full }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1696,
+        160
+      ],
+      "id": "dd1c0409-13bc-4ebc-838b-3ea721e03647",
+      "name": "ADD HIGH SCORE LEADS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4sNAzWQbbdWQv9iF",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "ADD HIGH SCORE LEADS TO GOOGLE SHEET"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "GPT-5"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Name: {{ $json.name.full }},\nRole : {{ $json.role.title }},{{ $json.role.department }},{{ $json.role.seniority }}\nLocation : {{ $json.location.city }}, {{ $json.location.country }} \nContacts : {{ $json.contacts.linkedin }}, {{ $json.contacts.email.status }}\nCompany : {{ $json.company.name }}, {{ $json.company.website }} , {{ $json.company.industry }}\nSize : {{ $json.company.size }}\nAlexa Ranking : {{ $json.company.alexaRanking }}"
+            },
+            {
+              "role": "system",
+              "content": "=Score this lead from 1–100 for likelihood to buy {{ $('Edit Fields').item.json.service_name }} at {{ $('Edit Fields').item.json.price_range }} in {{ $('Edit Fields').item.json.region }} using this rubric (sum to 100):\nLead JSON:\n{{$json}}\n\nRules: Round to an integer. If data is missing, estimate conservatively and note “limited data”. Do not explain steps.\n\nReply with EXACTLY:\n<score> — <very short reason citing 2–3 strongest signals>\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object",
+              "verbosity": "high"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        64
+      ],
+      "id": "5babe735-7d60-4215-9038-fec8209490ba",
+      "name": "SCORE THE LEAD",
+      "credentials": {
+        "openAiApi": {
+          "id": "i6czKckdw9Q0PXpe",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node — High-score filtering + formatted JSON output\n// Place right after your HTTP Request (Apollo mixed_people/search).\n\n/** ===================== TUNABLES ===================== **/\nconst ICP = {\n  targetCountries: ['Egypt','Saudi Arabia','United Arab Emirates','Kuwait','Qatar','Oman','Bahrain'],\n  targetIndustries: ['Retail','Ecommerce','Apparel','Fashion','Consumer Goods'],\n  targetDepartments: ['Marketing','Growth','Ecommerce','Operations','IT','Engineering','Sales','Product','Digital'],\n  titleKeywords: [\n    'ecommerce','shopify','growth','digital','marketing','demand','performance',\n    'revenue','retention','crm','automation','data','analytics','operations',\n    'cto','cmo','coo','ceo','founder','owner','vp','director','head','lead','manager','product'\n  ],\n  idealCompanySize: [5, 1000], // inclusive\n};\n\n// Weights (sum ~= 100)\nconst W = {\n  contactability: 30,   // email(10) + verified(12/4) + phone(4) + LinkedIn(4)\n  seniority:     20,    // CxO 20 … IC 5\n  titleKeywords: 12,    // up to 12 via keyword matches\n  department:     8,    // dept in target list\n  companySize:   10,    // inside ideal range = 10\n  industry:       8,    // industry in target list\n  geo:            6,    // country in target list\n  webReach:       4,    // Alexa rank mapping\n  recency:        2,    // updated within 12 months\n};\n\n// Emit controls: choose either/both\nconst FILTER = {\n  topN: 20,       // emit top N leads after sorting DESC\n  minScore: 70,   // and only those with score >= minScore\n  // Return one item per lead with a compact, structured JSON\n};\n/** ===================================================== **/\n\n// -------- helpers ----------\nconst norm = (s)=> (s ?? '').toString().trim().toLowerCase();\nconst hasAny = (text, keywords)=> {\n  const t = norm(text);\n  return keywords.filter(k => t.includes(norm(k)));\n};\nconst withinRange = (n, [min,max])=> typeof n==='number' && n>=min && n<=max;\nconst yearDiff = (d)=>{\n  const dt = d ? new Date(d) : null;\n  if (!dt || isNaN(dt)) return Infinity;\n  const ms = Date.now() - dt.getTime();\n  return ms / (1000*60*60*24*365);\n};\nconst alexaScore = (rank)=>{\n  if (!rank || typeof rank !== 'number' || rank <= 0) return 0;\n  if (rank <= 200_000) return 4;\n  if (rank <= 500_000) return 3;\n  if (rank <= 1_000_000) return 2;\n  return 0;\n};\nconst mapSeniority = (title, seniority)=>{\n  const t = norm(title);\n  const s = norm(seniority);\n  const is = (...k)=> k.some(x => t.includes(x) || s.includes(x));\n  if (is('ceo','chief executive','cxo','founder','co-founder','owner','partner','president')) return 20;\n  if (is('cmo','cto','cio','coo','cfo','chief ')) return 20;\n  if (is('vp','vice president')) return 18;\n  if (is('director')) return 15;\n  if (is('head','lead')) return 12;\n  if (is('manager')) return 10;\n  if (is('senior')) return 8;\n  return 5; // IC/Unknown\n};\nconst pickEmail = (person)=>{\n  if (person.email) return { value: person.email, status: person.email_status || person.emailStatus, confidence: person.email_confidence };\n  if (Array.isArray(person.emails) && person.emails.length){\n    const sorted = [...person.emails].sort((a,b)=>{\n      const aS = norm(a.status||a.state||'');\n      const bS = norm(b.status||b.state||'');\n      const order = (s)=> ['verified','valid','deliverable','guessed','unverified','unknown'].indexOf(s);\n      return order(aS) - order(bS);\n    });\n    const top = sorted[0];\n    return { value: top.value || top.email, status: top.status||top.state, confidence: top.confidence||top.confidence_level };\n  }\n  return {};\n};\nconst phones = (p)=>{\n  if (Array.isArray(p.phone_numbers) && p.phone_numbers.length) return p.phone_numbers;\n  if (p.phone) return [p.phone];\n  if (Array.isArray(p.phones) && p.phones.length) return p.phones;\n  return [];\n};\nconst orgOf = (p)=> p.organization || p.org || p.company || {};\nconst companySizeOf = (o)=> o.estimated_num_employees ?? o.employee_count ?? o.employees;\n\n// Extract people from upstream items\nfunction extractPeople(items){\n  const out = [];\n  for (const it of items){\n    const j = it.json ?? {};\n    if (Array.isArray(j.people)) out.push(...j.people);\n    else if (Array.isArray(j.results)) out.push(...j.results);\n    else if (j.person) out.push(j.person);\n    else if (j.first_name || j.title || j.name) out.push(j); // already a person\n  }\n  return out;\n}\n\n// -------- scoring ----------\nfunction scorePerson(p){\n  const o = orgOf(p);\n\n  // base fields\n  const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.name || '';\n  const title = p.title || '';\n  const seniority = p.seniority || '';\n  const department = p.department || p.departments?.[0] || '';\n  const country = p.country || p.location_country || p.country_name || '';\n  const city = p.city || p.location_city || '';\n  const linkedin = p.linkedin_url || p.linkedin || '';\n  const orgName = o.name || o.organization_name || '';\n  const website = o.website_url || o.primary_domain || o.domain || '';\n  const industry = o.industry || '';\n  const alexa = typeof (o.alexa_ranking ?? o.alexaRank ?? o.rank) === 'string'\n    ? Number(o.alexa_ranking ?? o.alexaRank ?? o.rank)\n    : (o.alexa_ranking ?? o.alexaRank ?? o.rank);\n  const size = companySizeOf(o);\n  const updYrs = yearDiff(p.updated_at || p.last_updated || p.last_activity_at || p.last_contacted_at);\n  const tMatches = hasAny(title, ICP.titleKeywords);\n  const emailObj = pickEmail(p);\n  const phoneArr = phones(p);\n\n  // Contactability (0–30)\n  let cScore = 0; const cNotes = [];\n  if (emailObj.value){ cScore += 10; cNotes.push(`Has email (${emailObj.value}) +10`); }\n  const st = norm(emailObj.status||'');\n  if (st.includes('verified') || st.includes('valid') || st.includes('deliverable')) { cScore += 12; cNotes.push(`Email status ${emailObj.status} +12`); }\n  else if (st.includes('guessed') || st.includes('unverified')) { cScore += 4; cNotes.push(`Email status ${emailObj.status} +4`); }\n  if (phoneArr.length){ cScore += 4; cNotes.push('Has phone +4'); }\n  if (linkedin){ cScore += 4; cNotes.push('Has LinkedIn +4'); }\n  if (cScore > W.contactability) cScore = W.contactability;\n\n  // Seniority (0–20)\n  const sScore = Math.min(mapSeniority(title, seniority), W.seniority);\n\n  // Title keywords (0–12)\n  const tkRaw = Math.min(tMatches.length * 4, W.titleKeywords);\n  const tkNotes = tMatches.length ? [`Title matches: ${tMatches.join(', ')} +${tkRaw}`] : [];\n\n  // Department (0–8)\n  const depHit = ICP.targetDepartments.some(d => norm(department) === norm(d) || norm(title).includes(norm(d)));\n  const dScore = depHit ? W.department : 0;\n\n  // Company size (0–10)\n  let csScore = 0;\n  if (typeof size === 'number'){\n    if (withinRange(size, ICP.idealCompanySize)) csScore = W.companySize;\n    else {\n      const [min,max] = ICP.idealCompanySize;\n      if ((size >= min/2 && size < min) || (size > max && size <= max*2)) csScore = 5;\n    }\n  }\n\n  // Industry (0–8)\n  const iScore = ICP.targetIndustries.some(ind => norm(industry).includes(norm(ind))) ? W.industry : 0;\n\n  // Geo (0–6)\n  const gScore = ICP.targetCountries.some(c => norm(country) === norm(c) || norm(country).includes(norm(c))) ? W.geo : 0;\n\n  // Web reach (0–4)\n  const wScore = alexaScore(alexa);\n\n  // Recency (0–2)\n  const rScore = (updYrs < 1) ? W.recency : 0;\n\n  const score = Math.round(cScore + sScore + tkRaw + dScore + csScore + iScore + gScore + wScore + rScore);\n  const grade = score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 55 ? 'C' : 'D';\n\n  const reasons = [\n    ...cNotes,\n    ...tkNotes,\n    dScore ? `Department fit (${department}) +${W.department}` : `Department not in target +0`,\n    typeof size === 'number'\n      ? (csScore === W.companySize ? `Company size ${size} in ideal range +${W.companySize}`\n         : csScore === 5 ? `Company size ${size} near ideal range +5`\n         : `Company size ${size} outside ideal range +0`)\n      : 'Company size unknown +0',\n    iScore ? `Industry match (${industry}) +${W.industry}` : `Industry not prioritized +0`,\n    gScore ? `Geo match (${country}) +${W.geo}` : `Geo outside target +0`,\n    wScore ? `Web reach (Alexa ${alexa}) +${wScore}` : `Web reach unknown/low +0`,\n    rScore ? `Recently updated (<12m) +${W.recency}` : `Not recently updated +0`,\n  ];\n\n  // ----- perfectly organized JSON payload per lead -----\n  const formatted = {\n    id: p.id ?? null,\n    name: { first: p.first_name ?? null, last: p.last_name ?? null, full: name || null },\n    role: { title: title || null, department: department || null, seniority: seniority || null },\n    location: { city: city || null, country: country || null },\n    contacts: {\n      email: emailObj.value ? { value: emailObj.value, status: emailObj.status ?? null } : null,\n      phones: phoneArr ?? [],\n      linkedin: linkedin || null\n    },\n    company: {\n      name: orgName || null,\n      website: website || null,\n      industry: industry || null,\n      size: (typeof size === 'number' ? size : null),\n      alexaRanking: (Number.isFinite(alexa) ? alexa : null),\n    },\n    scoring: {\n      score, grade,\n      breakdown: {\n        contactability: cScore, seniority: sScore, titleKeywords: tkRaw, department: dScore,\n        companySize: csScore, industry: iScore, geo: gScore, webReach: wScore, recency: rScore\n      },\n      positive: reasons.filter(r => !r.endsWith('+0')),\n      negative: reasons.filter(r => r.endsWith('+0')),\n      updatedAgeYears: Number.isFinite(updYrs) ? Number(updYrs.toFixed(2)) : null\n    }\n  };\n\n  return { score, formatted };\n}\n\n// -------- main --------\nconst people = extractPeople($input.all());\nif (!people.length) {\n  return [{ json: { leads: [], note: 'No leads found in input.' } }];\n}\n\n// Score everyone\nconst scored = people.map(scorePerson);\n\n// Sort DESC by score\nscored.sort((a,b)=> b.score - a.score);\n\n// Apply filters\nlet filtered = scored;\nif (typeof FILTER.minScore === 'number') {\n  filtered = filtered.filter(x => x.score >= FILTER.minScore);\n}\nif (typeof FILTER.topN === 'number' && FILTER.topN > 0) {\n  filtered = filtered.slice(0, FILTER.topN);\n}\n\n// Emit one item per high-scoring lead, with perfectly structured JSON payload\nconst outItems = filtered.map((x, idx) => ({\n  json: {\n    rank: idx + 1,\n    ...x.formatted\n  }\n}));\n\n// If nothing met the threshold, still return an empty list hint\nif (!outItems.length) {\n  return [{ json: { leads: [], note: `No leads met minScore ${FILTER.minScore}.` } }];\n}\n\nreturn outItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        144
+      ],
+      "id": "8b3d6c26-57aa-4acf-b372-485cdcb15625",
+      "name": "FILTER HIGH LEVEL LEADS",
+      "notes": "Filter the the high level leads"
+    }
+  ],
+  "pinData": {
+    "HTTP Request": [
+      {
+        "json": {
+          "people": [
+            {
+              "id": "662c927b318ebe00078b1b1d",
+              "first_name": "Suzanne",
+              "last_name": "Summers",
+              "name": "Suzanne Summers",
+              "linkedin_url": "http://www.linkedin.com/in/suzanne-summers-02676",
+              "title": "Director of Sales",
+              "email_status": "verified",
+              "photo_url": "https://static.licdn.com/aero-v1/sc/h/9c8pery4andzj6ohjkjp54m",
+              "twitter_url": null,
+              "github_url": null,
+              "facebook_url": null,
+              "extrapolated_email_confidence": null,
+              "headline": "Director of Sales at Farm",
+              "email": "suzanne@email.com",
+              "organization_id": "5592354d716964135f31cf02",
+              "employment_history": [
+                {
+                  "_id": "666fcd69b400bf0001e4e9b9",
+                  "created_at": null,
+                  "current": true,
+                  "degree": null,
+                  "description": null,
+                  "emails": null,
+                  "end_date": null,
+                  "grade_level": null,
+                  "kind": null,
+                  "major": null,
+                  "organization_id": "5592354d716964135f31cf02",
+                  "organization_name": "Armstrong Growers",
+                  "raw_address": null,
+                  "start_date": "2022-12-01",
+                  "title": "Director of Sales",
+                  "updated_at": null,
+                  "id": "666fcd69b400bf0001e4e9b9",
+                  "key": "666fcd69b400bf0001e4e9b9"
+                }
+              ],
+              "state": "California",
+              "city": "Glendora",
+              "country": "United States",
+              "organization": {
+                "id": "5592354d716964135f31cf02",
+                "name": "Farm Growers",
+                "website_url": "http://www.garmgrowers.com",
+                "blog_url": null,
+                "angellist_url": null,
+                "linkedin_url": "http://www.linkedin.com/company/farm-growers",
+                "twitter_url": null,
+                "facebook_url": null,
+                "primary_phone": {
+                  "number": "+1 555-123-1091",
+                  "source": "Owler",
+                  "sanitized_number": "+15551231091"
+                },
+                "languages": [],
+                "alexa_ranking": 250000,
+                "phone": "+1 555-123-1091",
+                "linkedin_uid": "5929027",
+                "founded_year": 1889,
+                "publicly_traded_symbol": null,
+                "publicly_traded_exchange": null,
+                "logo_url": "https://zenprospect-production.s3.amazonaws.com/uploads/pictures/65c211a030fb27000192ec87/picture",
+                "crunchbase_url": null,
+                "primary_domain": "farmgrowers.com",
+                "sanitized_phone": "+15551231091",
+                "estimated_num_employees": 120,
+                "industry": "Ecommerce"
+              },
+              "is_likely_to_engage": false,
+              "departments": [
+                "master_sales"
+              ],
+              "subdepartments": [
+                "sales"
+              ],
+              "seniority": "director",
+              "functions": [
+                "sales"
+              ],
+              "phone_numbers": [
+                {
+                  "raw_number": "+1 555-123-1091",
+                  "sanitized_number": "+15551231091",
+                  "type": "work_hq",
+                  "position": 0,
+                  "status": "no_status",
+                  "dnc_status": null,
+                  "dnc_other_info": null,
+                  "dialer_flags": null
+                }
+              ],
+              "updated_at": "2024-11-01T12:00:00Z",
+              "department": "Ecommerce"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "FILTER HIGH LEVEL LEADS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "SCORE THE LEAD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "ADD LOW SCORE LEADS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ADD HIGH SCORE LEADS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Do A Lead Call, Other...": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ADD LOW SCORE LEADS": {
+      "main": [
+        [
+          {
+            "node": "Do A Lead Call, Other...",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ADD HIGH SCORE LEADS": {
+      "main": [
+        [
+          {
+            "node": "Do A Lead Call, Other...",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SCORE THE LEAD": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FILTER HIGH LEVEL LEADS": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "100dd63e-8678-4fe6-bcd2-b66793e8d6c0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "68ac80ebb7ccca0a1bc575565255a14311fc983d21d382ca8824dbab4b6d81d4"
+  },
+  "id": "pVPmTHtx0rGdu16z",
+  "tags": []
+}
