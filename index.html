@@ -442,7 +442,7 @@
             }
         }
 
-        // Process incoming webhook data
+        // Process incoming webhook data from Google Sheets
         function processWebhookData(data) {
             if (!data) return;
 
@@ -455,8 +455,6 @@
                 leads = data.leads;
             } else if (data.json && Array.isArray(data.json)) {
                 leads = data.json;
-            } else if (data.people && Array.isArray(data.people)) {
-                leads = data.people;
             } else {
                 leads = [data];
             }
@@ -464,23 +462,23 @@
             let newLeadsCount = 0;
 
             leads.forEach(lead => {
-                // Check if lead already exists
+                // Check if lead already exists (by row_number or email)
                 const existingIndex = allLeads.findIndex(l => 
-                    l.id === (lead.id || lead.rank) || 
-                    (l.email === (lead.contacts?.email?.value || lead.email) && l.email !== 'N/A')
+                    l.id === lead.row_number || 
+                    (l.email === lead.Email && l.email !== 'N/A')
                 );
 
                 const processedLead = {
-                    id: lead.id || lead.rank || Date.now() + Math.random(),
+                    id: lead.row_number || Date.now() + Math.random(),
                     timestamp: lead.timestamp || new Date().toISOString(),
-                    name: lead.name?.full || `${lead.name?.first || lead.firstname || ''} ${lead.name?.last || lead.lastname || ''}`.trim() || 'Unknown',
-                    email: lead.contacts?.email?.value || lead.email || 'N/A',
-                    phone: lead.contacts?.phones?.[0]?.sanitized_number || lead.phonenumbers?.[0]?.sanitized_number || lead.phone || 'N/A',
-                    company: lead.company?.name || lead.organization?.name || 'N/A',
-                    role: lead.role?.title || lead.title || 'N/A',
-                    location: `${lead.location?.city || lead.city || ''}, ${lead.location?.country || lead.country || ''}`.trim() || 'N/A',
-                    score: lead.scoring?.score || lead.score || 0,
-                    grade: lead.scoring?.grade || lead.grade || 'N/A'
+                    name: lead.Name || 'Unknown',
+                    email: lead.Email || 'N/A',
+                    phone: lead.Phone ? String(lead.Phone) : 'N/A',
+                    company: lead.Company || 'N/A',
+                    role: lead.Role || 'N/A',
+                    location: lead.Location || 'N/A',
+                    score: lead.Score || 0,
+                    grade: lead.Score > 80 ? 'A' : lead.Score > 60 ? 'B' : lead.Score > 40 ? 'C' : 'D'
                 };
 
                 if (existingIndex >= 0) {
